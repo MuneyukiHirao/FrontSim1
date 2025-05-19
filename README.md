@@ -15,3 +15,4 @@ uvicorn backend.main:app --reload
 - `POST /api/v1/sim/reset`
 - `POST /api/v1/tasks/generate_daily`
 - `GET /api/v1/tasks/backlog`
+

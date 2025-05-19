@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,7 +20,6 @@ class TaskType(str, Enum):
     new_machine = "new_machine"
     sales_lead = "sales_lead"
     customer_req = "customer_req"
-
 
 @dataclass
 class Task:
