@@ -13,3 +13,6 @@ uvicorn backend.main:app --reload
 
 - `GET /api/v1/tasks/all?from=YYYY-MM-DD&to=YYYY-MM-DD`
 - `POST /api/v1/sim/reset`
+- `POST /api/v1/tasks/generate_daily`
+- `GET /api/v1/tasks/backlog`
+

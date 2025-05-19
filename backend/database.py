@@ -1,11 +1,13 @@
-import os
+
 import sqlite3
 from contextlib import contextmanager
+from pathlib import Path
 
-DB_PATH = os.environ.get("DB_PATH", "/tmp/test.db")
+DB_PATH = Path("./data/sim.db")
 
 
 def init_db():
+    DB_PATH.parent.mkdir(exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
@@ -23,11 +25,15 @@ def init_db():
         conn.commit()
 
 
+def reset_db():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DROP TABLE IF EXISTS tasks")
+    init_db()
+
+
 @contextmanager
-def get_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
+def get_db():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
         yield conn
-    finally:
-        conn.close()
+

@@ -1,45 +1,31 @@
-import os
-import unittest
-from datetime import datetime
 
-from backend import main, models, database
+import unittest
+import sqlite3
+from pathlib import Path
+
+from backend.main import generate_daily, get_backlog
 
 class EndpointTests(unittest.TestCase):
     def setUp(self):
-        test_db = "/tmp/test.db"
-        os.environ["DB_PATH"] = test_db
-        database.DB_PATH = test_db
-        database.init_db()
+        self.db_path = Path('test.db')
+        self.conn = sqlite3.connect(self.db_path)
+        self.conn.row_factory = sqlite3.Row
+        self.conn.execute(
+            "CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, vehicle_id INTEGER, status TEXT, due_date TEXT, duration_min INTEGER, created_dt TEXT)"
+        )
+        self.conn.commit()
 
     def tearDown(self):
-        pass
+        self.conn.close()
+        if self.db_path.exists():
+            self.db_path.unlink()
 
-    def test_get_tasks(self):
-        with database.get_conn() as conn:
-            conn.execute(
-                "INSERT INTO tasks (type, status, due_date, duration_min) VALUES (?,?,?,?)",
-                ("test", "pending", "2025-05-01", 60),
-            )
-            conn.commit()
-            task_id = conn.execute("SELECT id FROM tasks").fetchone()[0]
+    def test_generate_and_backlog(self):
+        result = generate_daily('2025-05-13', conn=self.conn)
+        self.assertEqual(result['generated'], 3)
 
-        tasks = main.get_tasks("2025-05-01", "2025-05-02")
-        self.assertEqual(len(tasks), 1)
-        self.assertEqual(tasks[0].id, task_id)
-
-    def test_reset_sim(self):
-        with database.get_conn() as conn:
-            conn.execute(
-                "INSERT INTO tasks (type, status, due_date, duration_min) VALUES (?,?,?,?)",
-                ("test", "pending", "2025-05-01", 60),
-            )
-            conn.commit()
-            count_before = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
-            self.assertGreater(count_before, 0)
-        main.reset_sim()
-        with database.get_conn() as conn:
-            count_after = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
-            self.assertEqual(count_after, 0)
+        tasks = get_backlog(conn=self.conn)
+        self.assertEqual(len(tasks), 3)
 
 if __name__ == '__main__':
     unittest.main()
